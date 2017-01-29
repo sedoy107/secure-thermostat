@@ -1,0 +1,83 @@
+This guide provides the directions on how to properly install the secure themostat on your Raspberry Pi.
+This guide only provisions the software part of the installation process. The hardware part will come as a dedicated word document.
+
+0. Have a Raspberry Pi ready and run the following in order to install the requred software:
+sudo apt-get install git, python-pip, python-paramiko
+sudo apt-get install  mysql-server-5.5
+While installing mysql you might have numbers different from 5.5 as the virsion might have becom updated.
+You will also be prompted to create a password for your database. If you're planning on running http server on this raspberry, then I would make this one very strong.
+Note that you might have some of these packages installed.
+
+1. Download the pre-requsites: 
+	a. If for some reason you haven't installed paramiko on the step 0, download it from github:
+	git clone https://github.com/paramiko/paramiko
+		x. Proceed into the paramiko folder and run:
+		python setup.py build
+		sudo python setup.py install
+			Note there may be issues caused by missing pre-requisites for paramiko library.
+			I cannot recall any issues as I installed it long time ago. Please let me know if 
+			the installation of paramiko library doesn't go smoothly.
+	b. Download another package, PyMouse: 
+	git clone https://github.com/pepijndevos/PyMouse
+		x. Proceed into the PyMouse folder and run:
+		python setup.py build
+		sudo python setup.py install
+			Same thing here, there may be issues caused by missing pre-requisites for paramiko library.
+			I cannot recall any issues as I installed it long time ago. Please let me know if 
+			the installation of paramiko library doesn't go smoothly.
+	c. Install image processing library, PILLOW:
+	sudo pip install PILLOW
+	d. Optionally, if you are planning to use MODBUS devices, PyModbus must be installed:
+	sudo pip install pymodbus
+
+2. Create two unix users on your Raspberry Pi. One will be hvac, the other - sensor:
+sudo useradd sensor -m
+sudo useradd hvac -m
+passwd sensor
+password hvac
+Note, you will need the passwords for hvac and sensor users very soon, please do not forget them.
+
+3. Clone the contents of secure thermostat onto your Raspberry Pi, for example into /home/pi/:
+git clone https://github.com/sedoy107/secure-thermostat.git
+
+4. Now create a ssh session for hvac user:
+ssh hvac@localhost
+Right now you're logged in as hvac and by default you're in the home folder which is /home/hvac
+
+5. Copy hvac's files:
+cp -r /home/pi/secure_thermostat/hvac .
+
+6. Generate private/public key pair (for simplicyty all prompts just hit enter):
+ssh-keygen
+
+7. Leave the hvac's session:
+exit
+
+8 - 11. Same as 4 - 7 but replace hvac with sensor.
+
+12. You should now be back to your original home directory for pi user. Type the following and hit enter to make sure we're at the correct location:
+cd
+
+13. Now you have cloned the project to your Raspberry Pi and should see secure_thermostat folder. Enter the folder:
+cd secure_thermostat
+
+14. Export mysql database. It is easier to do with phpmyadmin, but if you are freaking out installing a web serer and the stuff that comes along with it on your thermostat host then do it via command line:
+	a. mysql -u db_username -p
+		x. mysql> CREATE DATABASE thermostat;
+	c. mysql -u db_username -p thermostat < thermostat.sql.
+
+15. Open config.py in the text editor of your choice and carefully read through it and make changes in accordance with your setup. Instructions are inside.
+Note that you can also modify pictures that are located at the /seests/pics
+You can choose background picture that you like by placing it in the aforementioned folder and modifying the config.py, BACKGROUND_PICTURE_NAME variable
+	
+16. At this point, if everything went through the way it was expected, you should be able to run daemon.py, hvac_daemon.py, and tgui.py. These are the executive components:
+sudo python hvac_daemon.py
+python daemon.py
+python tgui.py
+Note that on newer versions of raspbian sudo prefix for the hvac_daemon.oy file is not necessery as it does not require root access to manipulate GPIO.
+
+17. Place script ThermostatAutoLaunch.py to your desktop:
+cp ThermostatAutoLaunch.py ~/Destop
+Now you have a script on your desktop that will run all the components in one piece.
+
+If something is still not working, please leave comments or send me an e-mail with the error, and I will help to resolve the issue.
